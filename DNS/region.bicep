@@ -1,33 +1,26 @@
-param resource_group_name string = 'rg-dns-test-2'
-param location string = 'japaneast'
+param location string
 param tags object = {}
 
-targetScope = 'subscription'
-
-resource resourceGroup 'Microsoft.Resources/resourceGroups@2020-06-01' = {
-  name: resource_group_name
-  location: location
-}
+targetScope = 'resourceGroup'
 
 // 疑似オンプレ環境
 // On-premises Vnet
-param onprem_vnetName string = 'vnet-onprem-${location}'
-param onprem_vnetAddressPrefix string = '10.100.0.0/16'
-param onprem_defaulsubnetName string = 'default'
-param onprem_subnetAddressPrefix string = '10.100.0.0/24'
+param onprem_vnetName string 
+param onprem_vnetAddressPrefix string
+param onprem_defaulsubnetName string 
+param onprem_subnetAddressPrefix string 
 
-module vnetOnprem 'core/network/vnet.bicep' = {
-  scope: resourceGroup
+module vnetOnprem '../core/network/vnet.bicep' = {
   name: '${onprem_vnetName}-Deployment'
   params: {
+    location: location
     vnetName: onprem_vnetName
     vnetAddressPrefix: onprem_vnetAddressPrefix
   }
 }
 
 // onprem subnet - default
-module OnpremDefaultSubnet 'core/network/subnet.bicep' = {
-  scope: resourceGroup
+module OnpremDefaultSubnet '../core/network/subnet.bicep' = {
   name: '${onprem_vnetName}-${onprem_defaulsubnetName}-Deployment'
   params: {
     vnetName: onprem_vnetName
@@ -42,30 +35,29 @@ module OnpremDefaultSubnet 'core/network/subnet.bicep' = {
 
 //hub
 //hub vnet
-param hub_vnetName string = 'vnet-hub-${location}'
-param hub_vnetAddressPrefix string = '10.110.0.0/16'
-param hub_defaultSubnetName string = 'default'
-param hub_defaultSubnetPrefix string = '10.110.0.0/24'
-param hub_privateEndpointSubnetName string = 'privateEndpointSubnet'
-param hub_privateEndpointSubentPrefix string = '10.110.10.0/24'
-param hub_inboundDNSSubnetName string = 'inboundDNSSubnet'
-param hub_inboundDNSSubnetPrefix string = '10.110.20.0/24'
-param hub_outboundDNSSubnetName string = 'outboundDNSSubnet'
-param hub_outboundDNSSubnetPrefix string = '10.110.30.0/24'
+param hub_vnetName string 
+param hub_vnetAddressPrefix string 
+param hub_defaultSubnetName string 
+param hub_defaultSubnetPrefix string 
+param hub_privateEndpointSubnetName string
+param hub_privateEndpointSubentPrefix string 
+param hub_inboundDNSSubnetName string 
+param hub_inboundDNSSubnetPrefix string 
+param hub_outboundDNSSubnetName string
+param hub_outboundDNSSubnetPrefix string
 
 // hub仮想ネットワークの定義
-module vnethub 'core/network/vnet.bicep' = {
-  scope: resourceGroup
+module vnethub '../core/network/vnet.bicep' = {
   name: '${hub_vnetName}Deployment'
   params: {
+    location: location
     vnetName: hub_vnetName
     vnetAddressPrefix: hub_vnetAddressPrefix 
   }
 }
 
 // Subnetの定義
-module hubDefaultSubnet 'core/network/subnet.bicep' = {
-  scope: resourceGroup
+module hubDefaultSubnet '../core/network/subnet.bicep' = {
   name: '${hub_vnetName}-${hub_defaultSubnetName}-Deployment'
   params: {
     vnetName: hub_vnetName
@@ -77,8 +69,7 @@ module hubDefaultSubnet 'core/network/subnet.bicep' = {
   ]
 }
 
-module hubPrivateEndpointSubnet 'core/network/subnet.bicep' = {
-  scope: resourceGroup
+module hubPrivateEndpointSubnet '../core/network/subnet.bicep' = {
   name: '${hub_vnetName}-${hub_privateEndpointSubnetName}-Deployment'
   params: {
     vnetName: hub_vnetName
@@ -90,8 +81,7 @@ module hubPrivateEndpointSubnet 'core/network/subnet.bicep' = {
     ]
 }
 
-module hubinboundDNSSubnet 'core/network/subnet.bicep' = {
-  scope: resourceGroup
+module hubinboundDNSSubnet '../core/network/subnet.bicep' = {
   name: '${hub_vnetName}-${hub_inboundDNSSubnetName}-Deployment'
   params: {
     vnetName: hub_vnetName
@@ -111,8 +101,7 @@ module hubinboundDNSSubnet 'core/network/subnet.bicep' = {
   ]
 }
 
-module huboutboundDNSSubnet 'core/network/subnet.bicep' = {
-  scope: resourceGroup
+module huboutboundDNSSubnet '../core/network/subnet.bicep' = {
   name: '${hub_vnetName}-${hub_outboundDNSSubnetName}-Deployment'
   params: {
     vnetName: hub_vnetName
@@ -132,61 +121,15 @@ module huboutboundDNSSubnet 'core/network/subnet.bicep' = {
   ]
 }
 
-
-
-// Spoke 
-param spoke_vnetName string = 'vnet-spoke-${location}'
-param spoke_vnetAddressPrefix string = '10.120.0.0/16'
-param spoke_defaultSubnetName string = 'default'
-param spoke_defaultSubnetPrefix string = '10.120.0.0/24'
-param spoke_privateEndpointSubnetName string = 'privateEndpointSubnet'
-param spoke_privateEndpointSubnetPrefix string = '10.120.10.0/24'
-
-module vnetSpoke 'core/network/vnet.bicep' = {
-  scope: resourceGroup
-  name: '${spoke_vnetName}-Deployment'
-  params: {
-    vnetName: spoke_vnetName
-    vnetAddressPrefix: spoke_vnetAddressPrefix 
-  }
-}
-
-// Subnetの定義
-module spokeDefaultSubnet 'core/network/subnet.bicep' = {
-  scope: resourceGroup
-  name: '${spoke_vnetName}-${spoke_defaultSubnetName}-Deployment'
-  params: {
-    vnetName: spoke_vnetName
-    subnetName: spoke_defaultSubnetName
-    subnetAddressPrefix: spoke_defaultSubnetPrefix
-  }
-  dependsOn: [
-    vnetSpoke
-  ]
-}
-
-module spokePrivateEndpointSubnet 'core/network/subnet.bicep' = {
-  scope: resourceGroup
-  name: '${spoke_vnetName}-${spoke_privateEndpointSubnetName}-Deployment'
-  params: {
-    vnetName: spoke_vnetName
-    subnetName: spoke_privateEndpointSubnetName
-    subnetAddressPrefix: spoke_privateEndpointSubnetPrefix
-  }
-  dependsOn: [
-    spokeDefaultSubnet
-  ]
-}
-
-param dnsresolverName string = 'dnsResolver-${location}'
-param inboundEndpointName string = 'inboundep'
-param outboundEndpointName string = 'outboundep'
+param dnsresolverName string 
+param inboundEndpointName string
+param outboundEndpointName string
 
 // hub private dns resolver
-module dnsResolver 'core/DNS/dnsresolver.bicep' = {
-  scope: resourceGroup
+module dnsResolver '../core/DNS/dnsresolver.bicep' = {
   name: '${dnsresolverName}-Deployment'
   params: {
+    location: location
     dnsresolverName: dnsresolverName
     inboundEndpointName: inboundEndpointName
     outboundEndpointName: outboundEndpointName
@@ -200,13 +143,13 @@ module dnsResolver 'core/DNS/dnsresolver.bicep' = {
   ]
 }
 
-param dnsFwdRulesetName string = 'dnsFwdRuleset-${location}'
+param dnsFwdRulesetName string 
 
 // hub dns Forwarding Ruleset
-module dnsForwardingRuleset 'core/DNS/dnsforwardingruleset.bicep' = {
-  scope: resourceGroup
+module dnsForwardingRuleset '../core/DNS/dnsforwardingruleset.bicep' = {
   name: '${dnsFwdRulesetName}Deployment'
   params: {
+    location: location
     dnsFwdRulesetName: dnsFwdRulesetName
     //outboundEndpointName: 'outboundep'
     outboundEndpointId: dnsResolver.outputs.outboundEndpointId
@@ -217,10 +160,54 @@ module dnsForwardingRuleset 'core/DNS/dnsforwardingruleset.bicep' = {
   ]
 }
 
-// VNet Peerings between hub and spokes
-module vnetPeerings1 'core/network/vnetpeerings.bicep' = {
-  scope: resourceGroup
-  name: 'vnetPeerings1'
+
+// Spoke 
+param spoke_vnetName string 
+param spoke_vnetAddressPrefix string 
+param spoke_defaultSubnetName string 
+param spoke_defaultSubnetPrefix string
+param spoke_privateEndpointSubnetName string 
+param spoke_privateEndpointSubnetPrefix string 
+
+module vnetSpoke '../core/network/vnet.bicep' = {
+  name: '${spoke_vnetName}-Deployment'
+  params: {
+    location: location
+    vnetName: spoke_vnetName
+    vnetAddressPrefix: spoke_vnetAddressPrefix 
+    dnsServers: [dnsResolver.outputs.inboundEndpointAddress]
+  }
+}
+
+// Subnetの定義
+module spokeDefaultSubnet '../core/network/subnet.bicep' = {
+  name: '${spoke_vnetName}-${spoke_defaultSubnetName}-Deployment'
+  params: {
+    vnetName: spoke_vnetName
+    subnetName: spoke_defaultSubnetName
+    subnetAddressPrefix: spoke_defaultSubnetPrefix
+  }
+  dependsOn: [
+    vnetSpoke
+  ]
+}
+
+module spokePrivateEndpointSubnet '../core/network/subnet.bicep' = {
+  name: '${spoke_vnetName}-${spoke_privateEndpointSubnetName}-Deployment'
+  params: {
+    vnetName: spoke_vnetName
+    subnetName: spoke_privateEndpointSubnetName
+    subnetAddressPrefix: spoke_privateEndpointSubnetPrefix
+  }
+  dependsOn: [
+    spokeDefaultSubnet
+  ]
+}
+
+
+// VNet Peerings between hub and spoke
+module vnetPeerings1 '../core/network/vnetpeerings.bicep' = {
+  name: 'vnetPeerings-${location}'
   params: {
     peeringtype: 'hub-spoke' 
     vnet1Name: hub_vnetName
@@ -235,33 +222,16 @@ module vnetPeerings1 'core/network/vnetpeerings.bicep' = {
 
 // Hub-onprem Gateway
 @secure()
-param  sharedKey string = 'azureSecureKey1234'
+param  sharedKey string 
+param hubVnetCfg object = {}
+param onpremVnetCfg object = {}
 
-param hubVnetCfg object = {
-  name: hub_vnetName
-  gatewayName: 'vpngw-hub1'
-  gatewaySubnetPrefix: '10.110.1.224/27'
-  gatewayPublicIPName: 'pip-hubvpngw'
-  connectionName: 'vNet1-to-vNet2'
-  asn: 65010
-}
-
-param onpremVnetCfg object = {
-  name: onprem_vnetName
-  gatewayName: 'vpngw-onprem1'
-  gatewaySubnetPrefix: '10.100.1.224/27'
-  gatewayPublicIPName: 'pip-onpremvpngw'
-  connectionName: 'vNet2-to-vNet1'
-  asn: 65011
-}
-
-module VPNGateway 'core/network/vpngw.bicep' = {
-  scope: resourceGroup
-  name: 'VPNGateway'
+module VPNGateway '../core/network/vpngw.bicep' = {
+  name: 'VPNGateway-${location}'
   params: {
     location: location
     sharedKey: sharedKey
-    gatewaySku: 'VpnGw1'
+    gatewaySku: 'VpnGw1Az'
     hubVnetCfg: hubVnetCfg
     onpremVnetCfg: onpremVnetCfg
   }
@@ -270,7 +240,6 @@ module VPNGateway 'core/network/vpngw.bicep' = {
     spokePrivateEndpointSubnet
   ]
 }
-
 
 output hub_vnetId string = vnethub.outputs.vnetId
 output onprem_vnetId string = vnetOnprem.outputs.vnetId

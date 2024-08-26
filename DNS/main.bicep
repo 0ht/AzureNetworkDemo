@@ -12,7 +12,7 @@ resource resourceGroup 'Microsoft.Resources/resourceGroups@2020-06-01' = {
 
 // 各リージョンネットワークをデプロイ
 // 東日本リージョン
-module region1 'region.bicep' = {
+module region1 './region.bicep' = {
   scope: resourceGroup
   name: '${location1}-Deployment'
   params: {
@@ -116,7 +116,7 @@ module region2 'region.bicep' = {
 param adminPassword string = 'P@ssw0rd1234'
 
 // onprem vm
-module onprem_winsvr 'core/vm/vm-simple-winsvr.bicep' = {
+module onprem_winsvr '../core/vm/vm-simple-winsvr.bicep' = {
   scope: resourceGroup
   name: 'onpremWinsvr-Deployment'
   params: {
@@ -134,7 +134,7 @@ module onprem_winsvr 'core/vm/vm-simple-winsvr.bicep' = {
   ]
 }
 // 確認用クライアントを region2 の疑似オンプレにデプロイ
-module onprem_win10 'core/vm/vm-simple-win10.bicep' = {
+module onprem_win10 '../core/vm/vm-simple-win10.bicep' = {
   scope: resourceGroup
   name: 'onpremWin10-Deployment'
   params: {
@@ -153,7 +153,7 @@ module onprem_win10 'core/vm/vm-simple-win10.bicep' = {
 }
 
 // Spoke1の確認用のVMをデプロイ
-module spoke_linux 'core/vm/vm-simple-linux.bicep' = {
+module spoke_linux '../core/vm/vm-simple-linux.bicep' = {
   scope: resourceGroup
   name: 'spoke-linux-${location1}-Deployment'
   params: {
@@ -173,7 +173,7 @@ module spoke_linux 'core/vm/vm-simple-linux.bicep' = {
   ]
 }
 // Spoke2の確認用のVMをデプロイ
-module spoke2_linux 'core/vm/vm-simple-linux.bicep' = {
+module spoke2_linux '../core/vm/vm-simple-linux.bicep' = {
   scope: resourceGroup
   name: 'spoke-linux-${location2}-Deployment'
   params: {
@@ -194,7 +194,7 @@ module spoke2_linux 'core/vm/vm-simple-linux.bicep' = {
 }
 
 // Bastion on onprem1
-module azureBastionSubnet 'core/network/bastion.bicep' = {
+module azureBastionSubnet '../core/network/bastion.bicep' = {
   scope: resourceGroup
   name: 'BastionDeployment'
   params: {
@@ -214,7 +214,7 @@ param fwdrule_dnsFwdDomain string = 'test.com.'
 param dnsFwdRuleName string = 'to-onprem-test-domain-${location1}'
 
 // region1
-module dnsForwardingRule1 'core/DNS/dnsforwardingrule.bicep' = {
+module dnsForwardingRule1 '../core/DNS/dnsforwardingrule.bicep' = {
   scope: resourceGroup
   name: 'dnsForwardingRule-${location1}-Deployment'
   params:{
@@ -231,7 +231,7 @@ module dnsForwardingRule1 'core/DNS/dnsforwardingrule.bicep' = {
 }
 
 // region2
-module dnsForwardingRule2 'core/DNS/dnsforwardingrule.bicep' = {
+module dnsForwardingRule2 '../core/DNS/dnsforwardingrule.bicep' = {
   scope: resourceGroup
   name: 'dnsForwardingRule-${location2}-Deployment'
   params:{
@@ -249,7 +249,7 @@ module dnsForwardingRule2 'core/DNS/dnsforwardingrule.bicep' = {
 
 // Private DNS Zone を デプロイ
 param privateDNSZoneName string = 'privatelink.blob.core.windows.net'
-module BLOBprivateDNSZone 'core/network/privateDNSZone.bicep' = {
+module BLOBprivateDNSZone '../core/network/privateDNSZone.bicep' = {
   scope: resourceGroup
   name: 'BLOBDNSZoneDeployment'
   params: {
@@ -259,7 +259,7 @@ module BLOBprivateDNSZone 'core/network/privateDNSZone.bicep' = {
 }
 
 // Private DNS ZoneにHub仮想ネットワークのリンクを追加
-module vnetlink_hub1 'core/network/privateDNSvnetLink.bicep' = {
+module vnetlink_hub1 '../core/network/privateDNSvnetLink.bicep' = {
   scope: resourceGroup
   name: 'vnetlink-${location1}-Deployment'
   params: {
@@ -274,7 +274,7 @@ module vnetlink_hub1 'core/network/privateDNSvnetLink.bicep' = {
   ]
 }
 
-module vnetlink_hub2 'core/network/privateDNSvnetLink.bicep' = {
+module vnetlink_hub2 '../core/network/privateDNSvnetLink.bicep' = {
   scope: resourceGroup
   name: 'vnetlink-${location2}-Deployment'
   params: {
@@ -295,7 +295,7 @@ param storageAccountName2 string = 'satoohtatst2'
 param storageContainerName string = 'content'
 param private bool = true
 
-module storage1 'core/storage/storage-account.bicep' = {
+module storage1 '../core/storage/storage-account.bicep' = {
   name: 'storage1-Deployment'
   scope: resourceGroup
   params: {
@@ -324,7 +324,7 @@ module storage1 'core/storage/storage-account.bicep' = {
 }
 
 // region2のSpokeに BLOB Storage をデプロイし、Private EndPointを追加
-module storage2 'core/storage/storage-account.bicep' = {
+module storage2 '../core/storage/storage-account.bicep' = {
   name: 'storage2-Deployment'
   scope: resourceGroup
   params: {
@@ -354,7 +354,7 @@ module storage2 'core/storage/storage-account.bicep' = {
 
 
 // cross region onPrem間の接続を確立
-module vpnConnectionOO 'core/network/vpnconnection.bicep' = {
+module vpnConnectionOO '../core/network/vpnconnection.bicep' = {
   scope: resourceGroup
   name: 'vpnConnectionOO-Deployment'
   params: {
@@ -371,7 +371,7 @@ module vpnConnectionOO 'core/network/vpnconnection.bicep' = {
 }
 
 // cross-region hub間の接続を確立
-module vpnConnectionHH 'core/network/vpnconnection.bicep' = {
+module vpnConnectionHH '../core/network/vpnconnection.bicep' = {
   scope: resourceGroup
   name: 'vpnConnectionHH-Deployment'
   params: {
@@ -388,7 +388,7 @@ module vpnConnectionHH 'core/network/vpnconnection.bicep' = {
 }
 
 // cross-region の Onprem-hub接続を確立
-module vpnConnectionOH1 'core/network/vpnconnection.bicep' = {
+module vpnConnectionOH1 '../core/network/vpnconnection.bicep' = {
   scope: resourceGroup
   name: 'vpnConnectionOH1-Deployment'
   params: {
@@ -404,7 +404,7 @@ module vpnConnectionOH1 'core/network/vpnconnection.bicep' = {
   ]
 }
  
-module vpnConnectionOH2 'core/network/vpnconnection.bicep' = {
+module vpnConnectionOH2 '../core/network/vpnconnection.bicep' = {
   scope: resourceGroup
   name: 'vpnConnectionOH2-Deployment'
   params: {
