@@ -5,23 +5,11 @@ param vmName string
 param vmSize string
 param adminUsername string
 @secure()
-param adminPassword string
-
+param adminPasswordOrKey string
+param authenticationType string
+param securityType string
 param vnetName string
 param subnetName string
-param isSpotVM bool = false 
-
-var imageReference = {
-  'Windows-10': {
-    publisher: 'MicrosoftWindowsDesktop'
-    offer: 'Windows-10'
-    sku: 'win10-22h2-pro'
-    version: 'latest'
-  }
-}
-//var publicIPAddressName = '${vmName}PublicIP'
-var networkInterfaceName = '${vmName}NetInt'
-var osDiskType = 'Standard_LRS'
 
 resource vnet 'Microsoft.Network/virtualNetworks@2023-09-01' existing =  {
   name: vnetName
@@ -30,6 +18,36 @@ resource vnet 'Microsoft.Network/virtualNetworks@2023-09-01' existing =  {
 resource subnet 'Microsoft.Network/virtualNetworks/subnets@2023-09-01' existing =  {
   name: subnetName
   parent: vnet
+}
+
+var imageReference = {
+  'Ubuntu-2204': {
+    publisher: 'Canonical'
+    offer: '0001-com-ubuntu-server-jammy'
+    sku: '22_04-lts-gen2'
+    version: 'latest'
+  }
+}
+//var publicIPAddressName = '${vmName}PublicIP'
+var networkInterfaceName = '${vmName}NetInt'
+var osDiskType = 'Standard_LRS'
+var linuxConfiguration = {
+  disablePasswordAuthentication: true
+  ssh: {
+    publicKeys: [
+      {
+        path: '/home/${adminUsername}/.ssh/authorized_keys'
+        keyData: adminPasswordOrKey
+      }
+    ]
+  }
+}
+var securityProfileJson = {
+  uefiSettings: {
+    secureBootEnabled: true
+    vTpmEnabled: true
+  }
+  securityType: securityType
 }
 
 resource networkInterface 'Microsoft.Network/networkInterfaces@2021-05-01' = {
@@ -61,8 +79,6 @@ resource vm 'Microsoft.Compute/virtualMachines@2021-11-01' = {
   name: vmName
   location: location
   properties: {
-    priority: ((isSpotVM) ? 'Spot' : null)  // Enable spot instance
-    evictionPolicy:  ((isSpotVM) ? 'Deallocate' : null)  // Deallocate the VM on eviction
     hardwareProfile: {
       vmSize: vmSize
     }
@@ -73,7 +89,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2021-11-01' = {
           storageAccountType: osDiskType
         }
       }
-      imageReference: imageReference['Windows-10']
+      imageReference: imageReference['Ubuntu-2204']
     }
     networkProfile: {
       networkInterfaces: [
@@ -85,15 +101,9 @@ resource vm 'Microsoft.Compute/virtualMachines@2021-11-01' = {
     osProfile: {
       computerName: vmName
       adminUsername: adminUsername
-      adminPassword: adminPassword
-      windowsConfiguration: {
-        provisionVMAgent: true
-        enableAutomaticUpdates: true
-        patchSettings: {
-          patchMode: 'AutomaticByOS'
-          assessmentMode: 'ImageDefault'
-         }
-      } 
+      adminPassword: adminPasswordOrKey
+      linuxConfiguration: ((authenticationType == 'password') ? null : linuxConfiguration)
     }
+    securityProfile: ((securityType == 'TrustedLaunch') ? securityProfileJson : null)
   }
 }

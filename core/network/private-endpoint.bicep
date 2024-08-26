@@ -1,7 +1,8 @@
 param privateDnsZoneName string
-param location string = resourceGroup().location
+param location string
 param tags object = {}
 param vnetId string = ''
+param vnetName string
 param subnetId string = ''
 param privateEndpointName string = ''
 param privateLinkServiceId string =''
@@ -13,7 +14,7 @@ resource privateDnsZone'Microsoft.Network/privateDnsZones@2020-06-01' = {
   tags: tags
 
   resource vnetlink 'virtualNetworkLinks' = {
-    name: '${privateDnsZoneName}-link'
+    name: 'vnetlink-${vnetName}'
     location: 'global'
     tags: tags
     properties: {

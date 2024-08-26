@@ -5,44 +5,31 @@ param vmName string
 param vmSize string
 param adminUsername string
 @secure()
-param adminPasswordOrKey string
-param authenticationType string
-param securityType string
-param subnetId string
+param adminPassword string
 
+param vnetName string
 param subnetName string
-resource subnet 'Microsoft.Network/virtualNetworks/subnets@2023-09-01' existing =  {
-  name: subnetName
-}
+param isSpotVM bool = false 
 
 var imageReference = {
-  'Ubuntu-2204': {
-    publisher: 'Canonical'
-    offer: '0001-com-ubuntu-server-jammy'
-    sku: '22_04-lts-gen2'
+  'WindowsServer2022': {
+    publisher: 'MicrosoftWindowsServer'
+    offer: 'WindowsServer'
+    sku: '2022-datacenter-g2'
     version: 'latest'
   }
 }
 //var publicIPAddressName = '${vmName}PublicIP'
 var networkInterfaceName = '${vmName}NetInt'
 var osDiskType = 'Standard_LRS'
-var linuxConfiguration = {
-  disablePasswordAuthentication: true
-  ssh: {
-    publicKeys: [
-      {
-        path: '/home/${adminUsername}/.ssh/authorized_keys'
-        keyData: adminPasswordOrKey
-      }
-    ]
-  }
+
+resource vnet 'Microsoft.Network/virtualNetworks@2023-09-01' existing =  {
+  name: vnetName
 }
-var securityProfileJson = {
-  uefiSettings: {
-    secureBootEnabled: true
-    vTpmEnabled: true
-  }
-  securityType: securityType
+
+resource subnet 'Microsoft.Network/virtualNetworks/subnets@2023-09-01' existing =  {
+  name: subnetName
+  parent: vnet
 }
 
 resource networkInterface 'Microsoft.Network/networkInterfaces@2021-05-01' = {
@@ -74,6 +61,8 @@ resource vm 'Microsoft.Compute/virtualMachines@2021-11-01' = {
   name: vmName
   location: location
   properties: {
+    priority: ((isSpotVM) ? 'Spot' : null)  // Enable spot instance
+    evictionPolicy:  ((isSpotVM) ? 'Deallocate' : null)  // Deallocate the VM on eviction
     hardwareProfile: {
       vmSize: vmSize
     }
@@ -84,7 +73,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2021-11-01' = {
           storageAccountType: osDiskType
         }
       }
-      imageReference: imageReference['Ubuntu-2204']
+      imageReference: imageReference['WindowsServer2022']
     }
     networkProfile: {
       networkInterfaces: [
@@ -96,9 +85,20 @@ resource vm 'Microsoft.Compute/virtualMachines@2021-11-01' = {
     osProfile: {
       computerName: vmName
       adminUsername: adminUsername
-      adminPassword: adminPasswordOrKey
-      linuxConfiguration: ((authenticationType == 'password') ? null : linuxConfiguration)
+      adminPassword: adminPassword
+      windowsConfiguration: {
+        provisionVMAgent: true
+        enableAutomaticUpdates: true
+        patchSettings: {
+          patchMode: 'AutomaticByOS'
+          assessmentMode: 'ImageDefault'
+         }
+      } 
     }
-    securityProfile: ((securityType == 'TrustedLaunch') ? securityProfileJson : null)
   }
 }
+
+
+output vmName string = vm.name
+output vmId string = vm.id
+output vmPrivateIP string = networkInterface.properties.ipConfigurations[0].properties.privateIPAddress
