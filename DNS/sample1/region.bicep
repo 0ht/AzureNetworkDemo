@@ -10,7 +10,7 @@ param onprem_vnetAddressPrefix string
 param onprem_defaulsubnetName string 
 param onprem_subnetAddressPrefix string 
 
-module vnetOnprem '../core/network/vnet.bicep' = {
+module vnetOnprem '../../core/network/vnet.bicep' = {
   name: '${onprem_vnetName}-Deployment'
   params: {
     location: location
@@ -20,7 +20,7 @@ module vnetOnprem '../core/network/vnet.bicep' = {
 }
 
 // onprem subnet - default
-module OnpremDefaultSubnet '../core/network/subnet.bicep' = {
+module OnpremDefaultSubnet '../../core/network/subnet.bicep' = {
   name: '${onprem_vnetName}-${onprem_defaulsubnetName}-Deployment'
   params: {
     vnetName: onprem_vnetName
@@ -47,7 +47,7 @@ param hub_outboundDNSSubnetName string
 param hub_outboundDNSSubnetPrefix string
 
 // hub仮想ネットワークの定義
-module vnethub '../core/network/vnet.bicep' = {
+module vnethub '../../core/network/vnet.bicep' = {
   name: '${hub_vnetName}Deployment'
   params: {
     location: location
@@ -57,7 +57,7 @@ module vnethub '../core/network/vnet.bicep' = {
 }
 
 // Subnetの定義
-module hubDefaultSubnet '../core/network/subnet.bicep' = {
+module hubDefaultSubnet '../../core/network/subnet.bicep' = {
   name: '${hub_vnetName}-${hub_defaultSubnetName}-Deployment'
   params: {
     vnetName: hub_vnetName
@@ -69,7 +69,7 @@ module hubDefaultSubnet '../core/network/subnet.bicep' = {
   ]
 }
 
-module hubPrivateEndpointSubnet '../core/network/subnet.bicep' = {
+module hubPrivateEndpointSubnet '../../core/network/subnet.bicep' = {
   name: '${hub_vnetName}-${hub_privateEndpointSubnetName}-Deployment'
   params: {
     vnetName: hub_vnetName
@@ -81,7 +81,7 @@ module hubPrivateEndpointSubnet '../core/network/subnet.bicep' = {
     ]
 }
 
-module hubinboundDNSSubnet '../core/network/subnet.bicep' = {
+module hubinboundDNSSubnet '../../core/network/subnet.bicep' = {
   name: '${hub_vnetName}-${hub_inboundDNSSubnetName}-Deployment'
   params: {
     vnetName: hub_vnetName
@@ -101,7 +101,7 @@ module hubinboundDNSSubnet '../core/network/subnet.bicep' = {
   ]
 }
 
-module huboutboundDNSSubnet '../core/network/subnet.bicep' = {
+module huboutboundDNSSubnet '../../core/network/subnet.bicep' = {
   name: '${hub_vnetName}-${hub_outboundDNSSubnetName}-Deployment'
   params: {
     vnetName: hub_vnetName
@@ -126,7 +126,7 @@ param inboundEndpointName string
 param outboundEndpointName string
 
 // hub private dns resolver
-module dnsResolver '../core/DNS/dnsresolver.bicep' = {
+module dnsResolver '../../core/DNS/dnsresolver.bicep' = {
   name: '${dnsresolverName}-Deployment'
   params: {
     location: location
@@ -146,7 +146,7 @@ module dnsResolver '../core/DNS/dnsresolver.bicep' = {
 param dnsFwdRulesetName string 
 
 // hub dns Forwarding Ruleset
-module dnsForwardingRuleset '../core/DNS/dnsforwardingruleset.bicep' = {
+module dnsForwardingRuleset '../../core/DNS/dnsforwardingruleset.bicep' = {
   name: '${dnsFwdRulesetName}Deployment'
   params: {
     location: location
@@ -169,7 +169,7 @@ param spoke_defaultSubnetPrefix string
 param spoke_privateEndpointSubnetName string 
 param spoke_privateEndpointSubnetPrefix string 
 
-module vnetSpoke '../core/network/vnet.bicep' = {
+module vnetSpoke '../../core/network/vnet.bicep' = {
   name: '${spoke_vnetName}-Deployment'
   params: {
     location: location
@@ -180,7 +180,7 @@ module vnetSpoke '../core/network/vnet.bicep' = {
 }
 
 // Subnetの定義
-module spokeDefaultSubnet '../core/network/subnet.bicep' = {
+module spokeDefaultSubnet '../../core/network/subnet.bicep' = {
   name: '${spoke_vnetName}-${spoke_defaultSubnetName}-Deployment'
   params: {
     vnetName: spoke_vnetName
@@ -192,7 +192,7 @@ module spokeDefaultSubnet '../core/network/subnet.bicep' = {
   ]
 }
 
-module spokePrivateEndpointSubnet '../core/network/subnet.bicep' = {
+module spokePrivateEndpointSubnet '../../core/network/subnet.bicep' = {
   name: '${spoke_vnetName}-${spoke_privateEndpointSubnetName}-Deployment'
   params: {
     vnetName: spoke_vnetName
@@ -206,7 +206,7 @@ module spokePrivateEndpointSubnet '../core/network/subnet.bicep' = {
 
 
 // VNet Peerings between hub and spoke
-module vnetPeerings1 '../core/network/vnetpeerings.bicep' = {
+module vnetPeerings1 '../../core/network/vnetpeerings.bicep' = {
   name: 'vnetPeerings-${location}'
   params: {
     peeringtype: 'hub-spoke' 
@@ -226,7 +226,7 @@ param  sharedKey string
 param hubVnetCfg object = {}
 param onpremVnetCfg object = {}
 
-module VPNGateway '../core/network/vpngw.bicep' = {
+module VPNGateway '../../core/network/vpngw.bicep' = {
   name: 'VPNGateway-${location}'
   params: {
     location: location
